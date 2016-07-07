@@ -1,3 +1,4 @@
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -9,14 +10,18 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 
 public class MineSweeper {
-	final static int FIELD_SIZE = 8;
-	final static int MINE_COUNT = 2;
-	final static int WINDOW_SIZE = 900;
+	final static int FIELD_SIZE = 16;
+	final static int MINE_SIZE = 50;
+	final static int MINE_COUNT = 36;
+	final static int WINDOW_SIZE = 1000;
 
 	static JFrame frame = new JFrame("MineSweeper");
 	static JPanel panel = new JPanel(new GridBagLayout());
+	static JScrollPane sp = new JScrollPane(panel);
 	static GridBagConstraints c = new GridBagConstraints();
 
 	static JButton[][] field = new JButton[FIELD_SIZE][FIELD_SIZE];
@@ -26,7 +31,9 @@ public class MineSweeper {
 
 	public static void main(String[] args) {
 		initializeField();
-		frame.add(panel); // Adds the panel to the window.
+		panel.setMinimumSize(new Dimension(MINE_SIZE*MINE_COUNT + (MINE_SIZE/10)*(MINE_COUNT-2),MINE_SIZE*MINE_COUNT + (MINE_SIZE/10)*(MINE_COUNT-2)));
+		//sp.add(panel);
+		frame.add(sp); // Adds the panel to the window.
 		frame.setSize(WINDOW_SIZE, WINDOW_SIZE);
 		frame.setVisible(true);
 		frame.setResizable(false);
@@ -64,14 +71,13 @@ public class MineSweeper {
 	public static void makeButton(int localX, int localY) {
 		field[localX][localY] = new JButton("?");
 		JButton button = field[localX][localY];
-		int dimensions = WINDOW_SIZE / (FIELD_SIZE * 2 + 2);
-		button.setMinimumSize(new Dimension(dimensions, dimensions));
+		button.setMinimumSize(new Dimension(MINE_SIZE, MINE_SIZE));
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = localX;
 		c.gridy = localY;
-		c.ipadx = dimensions;
-		c.ipady = dimensions;
-		c.insets = new Insets(dimensions / 10, dimensions / 10, dimensions / 10, dimensions / 10);
+		c.ipadx = MINE_SIZE;
+		c.ipady = MINE_SIZE;
+		c.insets = new Insets(MINE_SIZE / 10, MINE_SIZE / 10, MINE_SIZE / 10, MINE_SIZE / 10);
 		panel.add(field[localX][localY], c);
 		button.addActionListener(new ActionListener() { // Runs specific code
 			// when pressed.
@@ -130,7 +136,13 @@ public class MineSweeper {
 				field[hor][ver].setText("0");
 				field[hor][ver].setEnabled(false);
 				if (hor > 0) {
+					if (ver > 0) {
+						sweep(hor - 1, ver - 1, true);
+					}
 					sweep(hor - 1, ver, true);
+					if (ver < FIELD_SIZE - 1) {
+						sweep(hor - 1, ver + 1, true);
+					}
 				}
 				if (ver > 0) {
 					sweep(hor, ver - 1, true);
@@ -139,9 +151,15 @@ public class MineSweeper {
 					sweep(hor, ver + 1, true);
 				}
 				if (hor < FIELD_SIZE - 1) {
+					if (ver > 0) {
+						sweep(hor + 1, ver - 1, true);
+					}
 					sweep(hor + 1, ver, true);
+					if (ver < FIELD_SIZE - 1) {
+						sweep(hor + 1, ver + 1, true);
+					}
 				}
-			} else if (!clearing) {
+			} else {
 				field[hor][ver].setText(adjacent + "");
 				field[hor][ver].setEnabled(false);
 				if (!lost) {
@@ -181,7 +199,7 @@ public class MineSweeper {
 	}
 
 	public static void gameOver() {
-		lost=true;
+		lost = true;
 		for (int i = 0; i < FIELD_SIZE; i++) {
 			for (int j = 0; j < FIELD_SIZE; j++) {
 				sweep(i, j, false);
